@@ -1,0 +1,410 @@
+//200
+//pluginのエラーは通知が起きない。
+
+
+version {
+	"origin/1.0"
+}
+OnPluginLoad.Self {
+    CeVIOBoot = ""
+    //起動時にserverを起動する。
+    _Server = PluginDirectory + "\dll\myserver.exe"
+    _devnull = EXECUTE( _Server )
+}
+
+OnPluginUnload.Self {
+    //end送信
+    FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
+    _devNull = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "end"  )
+
+    ERASEVAR( CeVIOBoot )
+}
+
+
+//使えるキャラクター一覧のメニューを生成する。
+OnMenuExec {
+    if ( CeVIOBoot == "" ){
+        //起動と同時に処理したかったが、タイムアウトするのかSSPの起動が止まってしまう。
+        FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
+        CeVIOBoot = FUNCTIONEX("./dll/proxy_ex.dll" , "./checkCeVIO.exe" )
+    }
+
+
+    if ( CeVIOBoot == "True" ) {
+
+        _before = "\_q\n[half]【インストール済み】\n"
+		_other = "\![*]\q[設定していないゴーストに対する読み上げ,OnCeVIO.OtherTalk]\n"
+        _after = "\![*]\q[設定終了,]\n[half]\e"
+
+        //文字コードがsjisである必要があった。
+        FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "sjis"  )
+        CeVIO.CharList = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "GetCharList"  )
+
+
+        _CharArray = SPLIT( CeVIO.CharList , ',' )
+        _count = ARRAYSIZE(_CharArray)
+        _CeVIO.CharListMenu = ""
+        for _i = 0 ; _i < _count ; _i++ {
+            if ( _CharArray[_i] != "" ) {
+                _Char = _CharArray[_i]
+                _CeVIO.CharListMenu = _CeVIO.CharListMenu + "\![*]\q[%(_Char),OnCeVIO.CharConfigMenu,%(_Char)]\n"
+            }
+        }
+        _CeVIO.CharListMenu = _before + _CeVIO.CharListMenu + _other + _after
+        _CeVIO.CharListMenu
+
+    } else {
+        "CeVIOの起動ができませんでした。"
+    }
+}
+
+
+//設定していないゴーストの読み上げの設定。
+OnCeVIO.OtherTalk {
+
+        _CharArray = SPLIT( CeVIO.CharList , ',' )
+        _count = ARRAYSIZE(_CharArray)
+        _CeVIO.CharListMenu = ""
+        for _i = 0 ; _i < _count ; _i++ {
+            if ( _CharArray[_i] != "" ) {
+                _Char = _CharArray[_i]
+                _CeVIO.CharListMenu = _CeVIO.CharListMenu + "\![*]\q[%(_Char),OnCeVIO.ConfigTalkCharactar,%(_Char)]\n"
+            }
+        }
+        _before = "\_q\n[half]【インストール済み】\n"
+        _after = "\![*]\q[読み上げない。,OnCeVIO.ConfigTalkCharactar,None]\n[half]\e"
+
+        _CeVIO.CharListMenu = _before + _CeVIO.CharListMenu + _after
+        _CeVIO.CharListMenu
+}
+OnCeVIO.ConfigTalkCharactar {
+	_Char = reference[0]
+	if ( _Char == "None") {
+		CeVIO.Who = ""
+		"解除したよ。"
+	} else {
+		CeVIO.Who = reference[0]
+		"設定したよ。"
+	}
+}
+
+
+//ゴーストが喋るときの設定
+OnOtherGhostTalk {
+    if ( CeVIOBoot == "" ){
+        FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
+        CeVIOBoot = FUNCTIONEX("./dll/proxy_ex.dll" , "./checkCeVIO.exe" )
+    }
+
+
+
+    if ( CeVIOBoot == "True" ) {
+        TalkingGhost = reference[0]
+        _Char = TalkCharcter( TalkingGhost )
+        //_Char = "さとうささら"
+        
+
+        EVAL( "_Volume    = CeVIO.%(_Char).Volume" )
+        EVAL( "_Speed     = CeVIO.%(_Char).Speed" )
+        EVAL( "_Tone      = CeVIO.%(_Char).Tone" )
+        EVAL( "_Alpha     = CeVIO.%(_Char).Alpha" )
+        EVAL( "_ToneScale = CeVIO.%(_Char).ToneScale" )
+
+        if ( _Volume       == "" ) { _Volume    = 50 }
+        if ( _Speed        == "" ) { _Speed     = 45 }
+        if ( _Tone         == "" ) { _Tone      = 50 }
+        if ( _Alpha        == "" ) { _Alpha     = 50 }
+        if ( _ToneScale    == "" ) { _ToneScale = 50 }
+
+
+		//GETLIST options
+		//"元気,悲しみ"
+		FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "sjis"  )
+		_CeVIO.Options   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "GetCharOptions_%(_Char)"  )
+
+		_CharOptions = ""
+		for _i = 0 ; _i < ARRAYSIZE( _CeVIO.Options ) ; _i++ {
+
+			//リストの最後の空白が沸く対処。
+			_CeVIO.Options[_i] = REPLACE( _CeVIO.Options[_i] , " " , "" )
+
+            //空配列対策
+			if ( _CeVIO.Options[_i] == "") {
+				continue
+			}
+
+			_OptionName = _CeVIO.Options[_i]
+			EVAL( "_OptionNum = CeVIO.%(_Char).%(_OptionName)")
+			if ( _OptionNum == "" || _OptionNum == "0"){
+                _CharOptions = _CharOptions + ","
+			} else {
+                _CharOptions = _CharOptions + _OptionName + "MySep" + TOSTR(_OptionNum) + ","
+            }
+		}
+		_CharOptions = RE_REPLACE( _CharOptions , ",$" , "")
+
+
+
+
+        _Script       = reference[4]
+        _VoiceText    = TalkText( _Script )
+        VoiceText    = _VoiceText
+
+
+        if ( _VoiceText != "" && _Char != "" ) {
+            FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
+            _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)" )
+        }
+        
+        devnull   = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
+        SAVEVAR()
+    }
+}
+
+TalkCharcter {
+    //発言したゴーストmenu名
+    _TalkingGhost = _argv[0]
+    _CeVIO.CharList = GETVARLIST( "CeVIO.WhoTalker." )
+    _Talker = ""
+    for _i = 0 ; _i < ARRAYSIZE( _CeVIO.CharList ) ; _i++ {
+
+        if ( _Talker != "" ) {
+            break
+        }
+        //空配列対策
+        if ( _CeVIO.CharList[_i] == "" ) {
+            continue
+        }
+
+        //Voice キャラ名
+        _TalkCharName = REPLACE( _CeVIO.CharList[_i] , "CeVIO.WhoTalker." , "" )
+
+        //その子の呼び出したいゴーストリスト
+        EVAL( "_SSP.CharList = %(_CeVIO.CharList[_i])" )
+        _CharListArray = SPLIT( _SSP.CharList , "," )
+
+        for _n = 0 ; _n < ARRAYSIZE( _CharListArray ) ; _n++ {
+            //今回呼ばれたゴーストがマッチするかどうか
+            if ( _TalkingGhost == _CharListArray[_n] ) {
+                _Talker = _TalkCharName
+                break
+            }
+        }
+    }
+    //もし設定がなかったら喋る子
+    if ( _Talker == "") {
+        _Talker = CeVIO.Who
+    }
+    _Talker
+}
+
+TalkText {
+    _Script = _argv[0]
+    _text         = RE_REPLACE( _Script , '' , "" )
+
+    ////MainGhostName
+    //_text       = RE_REPLACE( _text  , '\\0' , "MainGhostName" )
+    //_text       = RE_REPLACE( _text  , '\\h' , "MainGhostName" )
+    //
+    ////SubGhostName
+    //_text       = RE_REPLACE( _text  , '\\1' , "GhostName" )
+    //_text       = RE_REPLACE( _text  , '\\u' , "GhostName" )
+
+    //サクラスクリプト除去
+    _text         = RE_REPLACE( _text  , '\\__.\[.*?\]' , "" )
+    _text         = RE_REPLACE( _text  , '\\_.\[.*?\]' , "" )
+    _text         = RE_REPLACE( _text  , '\\_.' , "" )
+    _text         = RE_REPLACE( _text  , '\\.\[.*?\]' , "" )
+    _text         = RE_REPLACE( _text  , '\\w[0-9]' , "" )
+
+    //バルーンの初期化だと/nが飛んでいるように見える。
+    _text         = RE_REPLACE( _text  , '\\n' , "。" )
+    _text         = RE_REPLACE( _text  , '\\.' , "" )
+
+    _text         = REPLACE( _text  , ' ' ,  "、" )
+    _text         = REPLACE( _text  , '　' , "、" )
+
+    _text         = REPLACE( _text  , '(' , "" )
+    _text         = REPLACE( _text  , ')' , "" )
+    _text         = REPLACE( _text  , '（' , "" )
+    _text         = REPLACE( _text  , '）' , "" )
+    _text         = REPLACE( _text  , '「' , "" )
+    _text         = REPLACE( _text  , '」' , "" )
+    _text         = REPLACE( _text  , '【' , "" )
+    _text         = REPLACE( _text  , '】' , "" )
+
+    _text         = REPLACE( _text  , '、、、、、、' , "、" )
+    _text         = REPLACE( _text  , '、、、、、' , "、" )
+    _text         = REPLACE( _text  , '、、、、' , "、" )
+    _text         = REPLACE( _text  , '、、、' , "、" )
+    _text         = REPLACE( _text  , '、、' , "、" )
+
+    _text         = REPLACE( _text  , '…………………' , "…" )
+    _text         = REPLACE( _text  , '………………' , "…" )
+    _text         = REPLACE( _text  , '……………' , "…" )
+    _text         = REPLACE( _text  , '…………' , "…" )
+    _text         = REPLACE( _text  , '………' , "…" )
+    _text         = REPLACE( _text  , '……' , "…" )
+
+    //\n代用
+    _text         = REPLACE( _text  , '。。。。。。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。。' , "。" )
+    _text         = REPLACE( _text  , '。。。' , "。" )
+    _text         = REPLACE( _text  , '。。' , "。" )
+
+    _text         = REPLACE( _text  , '・・・・・・・' , "・" )
+    _text         = REPLACE( _text  , '・・・・・・' , "・" )
+    _text         = REPLACE( _text  , '・・・・・' , "・" )
+    _text         = REPLACE( _text  , '・・・・' , "・" )
+    _text         = REPLACE( _text  , '・・・' , "・" )
+    _text         = REPLACE( _text  , '・・' , "・" )
+
+    _text         = REPLACE( _text  , '？' , '?' )
+    _text         = REPLACE( _text  , '！' , '!' )
+
+    _text         = REPLACE( _text  , '!!!!' , "!" )
+    _text         = REPLACE( _text  , '!!!' , "!" )
+    _text         = REPLACE( _text  , '!!' , "!" )
+    _text         = REPLACE( _text  , '????' , "?" )
+    _text         = REPLACE( _text  , '???' , "?" )
+    _text         = REPLACE( _text  , '??' , "?" )
+    _text         = REPLACE( _text  , '!?!?' , '!?' )
+    _text         = REPLACE( _text  , '?!?!' , '?!' )
+
+
+    _text
+}
+
+
+
+
+//キャラクタごとの設定メニュー
+OnCeVIO.CharConfigMenu {
+    //引数に必要
+    _Char = reference[0]
+
+    EVAL( "_Volume    = CeVIO.%(_Char).Volume" )
+    EVAL( "_Speed     = CeVIO.%(_Char).Speed" )
+    EVAL( "_Tone      = CeVIO.%(_Char).Tone" )
+    EVAL( "_Alpha     = CeVIO.%(_Char).Alpha" )
+    EVAL( "_ToneScale = CeVIO.%(_Char).ToneScale" )
+    _CeVIO.MainOptions = "/
+            \![*]\q[%(_Volume   ) : Volume   ,OnCeVIO.CharOption,%(_Char),Volume]\n/
+            \![*]\q[%(_Speed    ) : Speed    ,OnCeVIO.CharOption,%(_Char),Speed]\n/
+            \![*]\q[%(_Tone     ) : Tone     ,OnCeVIO.CharOption,%(_Char),Tone]\n/
+            \![*]\q[%(_Alpha    ) : Alpha    ,OnCeVIO.CharOption,%(_Char),Alpha]\n/
+            \![*]\q[%(_ToneScale) : ToneScale,OnCeVIO.CharOption,%(_Char),ToneScale]\n/
+            -----------\n"
+
+    //キャラクターの項目リストを取得する
+    //_CeVIO.Options =  "元気,悲しみ"
+    FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "sjis"  )
+    _CeVIO.Options   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "GetCharOptions_%(_Char)"  )
+	
+
+
+    //空を排除しなくては
+    _OptionArray = SPLIT( _CeVIO.Options, ',' )
+    _count = ARRAYSIZE(_OptionArray)
+
+    _CeVIO.CharListMenu = ""
+    for _i = 0 ; _i < _count ; _i++ {
+        if ( _OptionArray[_i] != "" ) {
+            _Option = _OptionArray[_i]
+            EVAL( "_Sa = CeVIO.%(_Char).%(_Option)" )
+            _CeVIO.CharListMenu = _CeVIO.CharListMenu + "\![*]\q[%(_Sa) : %(_Option),OnCeVIO.CharOption,%(_Char),%(_Option)]\n"
+        }
+    }
+
+    ////誰が誰にしゃべらせるか。,
+    _CeVIO.WhoTalker = "-----------\n\![*]\q[喋らせる対象,OnCeVIO.WhoTalker,%(_Char)]\n"
+
+    _before = "\_q\n[half]【0~100で設定してください】\n"
+	_after = "\![*]\q[設定終了,]\n[half]\e"
+    _CeVIO.CharListMenu = _before + _CeVIO.MainOptions + _CeVIO.CharListMenu + _CeVIO.WhoTalker + _after
+    _CeVIO.CharListMenu
+}
+
+
+OnCeVIO.WhoTalker {
+    CeVIO.Char   = reference[0]
+    "\_qこの声でどのゴーストを喋らせたいか入力してください。\n/
+    入力はゴースト切り替えで表示される名前です。\n/
+    複数入力する場合は「,」で区切ってください。\n/
+    \![open,inputbox,OnCeVIO.SetWhoTalker]\e"
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+OnCeVIO.SetWhoTalker {
+    _Chars = reference[0]
+    EVAL( "CeVIO.WhoTalker.%(CeVIO.Char) = %(CHR(34))%(_Chars)%(CHR(34))" )
+    ///if ( _Chars == "" ) {
+    ///    ERASEVAR( "CeVIO.WhoTalker.%(CeVIO.Char)" )
+    ///} else {
+    ///    EVAL( "CeVIO.WhoTalker.%(CeVIO.Char) = %(CHR(34))%(_Chars)%(CHR(34))" )
+    ///}
+    CeVIO.Char   = "" 
+}
+
+
+OnCeVIO.CharOption {
+    CeVIO.Char   = reference[0]
+    CeVIO.Option = reference[1]
+
+    "\![open,inputbox,OnCeVIO.SetOption]"
+}
+
+
+OnCeVIO.SetOption {
+    _num = TOINT( reference[0] )
+    if ( _num < 0 || 100 < _num ) {
+        "0から100までの半角数字を入力してください。\![open,inputbox,OnCeVIO.SetOption]"
+    } else {
+        EVAL( "CeVIO.%(CeVIO.Char).%(CeVIO.Option) = %(_num)" )
+        //確認のメニューはさっきのを呼びなおす
+        //設定に戻る。
+        //設定終了
+        _before = "\_q\n[half]\n"
+        _mid    = "\![*]\q[設定に戻る。,OnCeVIO.CharConfigMenu,%(CeVIO.Char)]\n"
+        _after  = "\![*]\q[設定終了,]\n[half]\e"
+        _text   = _before + _mid + _after
+        _text
+
+        CeVIO.Char   = "" 
+        CeVIO.Option = "" 
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+

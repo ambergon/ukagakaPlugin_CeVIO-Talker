@@ -1,0 +1,15 @@
+Charset,UTF-8
+readme.charset,UTF-8
+readme.readme.md
+type,plugin
+name,CeVIO-Talker
+craftman,ambergon
+filename,yaya.dll
+
+id,dcfa1790-7a85-11ed-a77e-0800200c9a66
+
+secondchangeinterval,0
+otherghosttalk,before
+
+//更新url
+//homeurl,
