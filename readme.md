@@ -5,7 +5,7 @@
 [【SSP】伺かをCEVIO AIの力を借りてフルボイス化した。【WINDOWS10】](https://ambergonslibrary.com/?p=8544)
 
 
-##お借りしたもの
+## お借りしたもの
 yaya.dll
 [Releases · YAYA-shiori/yaya-shiori · GitHub](https://github.com/YAYA-shiori/yaya-shiori/releases)
 
