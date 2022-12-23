@@ -13,9 +13,13 @@ proxy_ex.dll
 [Release SAORI : proxy_ex v1.0.2 · ukatech/csaori · GitHub](https://github.com/ukatech/csaori/releases/tag/saori_proxy_ex_v1.0.2)
 
 
+## Other
+このプログラムを利用することによるいかなる問題や損害に対して、私は責任を負いません。
+
 
 ## Author
 [ambergon](https://twitter.com/Sc_lFoxGon)
+
 
 
 
