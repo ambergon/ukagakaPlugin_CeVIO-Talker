@@ -21,43 +21,65 @@ using CeVIO.Talk.RemoteService2;
 //match
 using System.Text.RegularExpressions;
 namespace MyServer {
-    class Program {
-        private static int numThreads = 8;
+    public class Program {
+        private static int    numThreads = 8;
+        //end判定用。すべてのwhileに適応。
+        public  static bool   ContinueProgram = true;
+        //CPUの処理を下げたい。
+        public  static int    WaitTime = 2000;
+
+        //受け取ったテキストを共有する。
+        public  static string CeVIOText = "";
+        //現在喋っているキャラクタ名を共有する。
+        //stopを使うことで新しいトークに対応できる。
+        public  static string TalkingChar = "";
+        public  static bool   TalkingCancel = false;
+
 
         static void Main(string[] args) {
             // 【CeVIO AI】開始
-            ServiceControl2.StartHost(false);
-            CreatePipeServerTask("UkagakaPlugin/CeVIO_Talker").Wait();
+            //ServiceControl2.StartHost(false);
+            
+            Parallel.Invoke(
+                    () => {
+                        //文字列を受けて流すだけの関数 
+                        RecieveServerTask("UkagakaPlugin/CeVIO_Talker").Wait();
+                    },
+                    () => {
+                        TalkingCeVioTask().Wait();
+                    }
+                );
+            
+
             // 【CeVIO AI】終了
-            ServiceControl2.CloseHost();
+            //ServiceControl2.CloseHost();
         }
 
-        public static Task CreatePipeServerTask(string pipeName) {
-
-
+        public static Task RecieveServerTask(string pipeName) {
             return Task.Run(() => {
                 NamedPipeServerStream pipeServer = null;
+                CeVIO cevio = new CeVIO();
+                Talker2 talker = new Talker2();
 
-                while ( true ) {
+
+                while ( ContinueProgram ) {
                     try {
                         pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.InOut, numThreads);
 
                         // クライアントの接続待ち
                         pipeServer.WaitForConnection();
                         StreamString ss = new StreamString(pipeServer);
-                        CeVIO cevio = new CeVIO();
 
 
-                        while ( true ) {
-
-
+                        while ( ContinueProgram ) {
                             string writeData = "";
                             var readData  = ss.ReadString();
 
                             //終了項目
                             if ( readData == "end") {
                                 ss.WriteString( "endClient" );
-                                break;
+                                Program.CeVIOText = readData;
+                                ContinueProgram = false;
 
 
                             //使用可能なキャラリストを取得する
@@ -77,14 +99,18 @@ namespace MyServer {
                             } else {
                                 writeData = "Server read OK.";
                                 ss.WriteString( writeData );
-                                cevio.talk( readData );
+                                Console.WriteLine( readData );
+
+                                Program.TalkingCancel = true;
+                                //最後に喋ったキャラを保存しておけばキャンセルが聞くな。
+                                if( Program.TalkingChar != ""){
+                                    talker.Cast = Program.TalkingChar ;
+                                    talker.Stop();
+                                }
+                                Program.CeVIOText = readData;
                             }
-
-
                         }
 
-
-                        break;
                     // クライアントが切断
                     } catch (OverflowException e) {
                         //Console.WriteLine( e.Message );
@@ -95,10 +121,29 @@ namespace MyServer {
 
 
             });
+        }
 
 
+        public static Task TalkingCeVioTask() {
+            string text = "";
+            CeVIO cevio = new CeVIO();
+            return Task.Run(() => {
+                        while ( ContinueProgram ) {
+                            if( Program.CeVIOText != "" && Program.CeVIOText != "end") {
+                                text = Program.CeVIOText;
+                                Program.CeVIOText = "";
+
+                                cevio.talk( text );
+                                //cevio.testTalk( text );
+                            }
+                            Thread.Sleep( Program.WaitTime );
+                        }
+                    });
         }
     }
+
+
+
 
     public class StreamString {
         private Stream ioStream;
@@ -138,7 +183,6 @@ namespace MyServer {
 
 
 
-
     public class CeVIO {
 
         //使用可能なキャラリストを取得
@@ -170,15 +214,40 @@ namespace MyServer {
         }
 
 
+        //public void testTalk(string arg) {
+        //    ServiceControl2.StartHost(false);
+        //    Talker2 talker = new Talker2();
+
+        //    talker.Cast = "ONE";
+
+        //    //200文字問題
+        //    string   VoiceText   = arg;
+        //    string CheckText = VoiceText.Replace("。","");
+        //    CheckText = CheckText.Replace("、","");
+        //    CheckText = CheckText.Replace("　","");
+        //    CheckText = CheckText.Replace(" ","");
+        //    //バルーン空打ち対策
+        //    if ( CheckText != "" ) {
+        //        //ひょっとしてだけど、読むキャラごとにストップがあるのでは
+        //        talker.Stop();
+        //        SpeakingState2 state = talker.Speak( VoiceText );
+        //        state.Wait();
+        //        //Console.WriteLine( VoiceText );
+        //    }
+        //}
+
+
         public void talk(string arg) {
             ServiceControl2.StartHost(false);
             Talker2 talker = new Talker2();
+
 
             char[] sep = new char[] { ',' };
             //まずは頭を一つ
             string[] head = arg.Split( sep , 2);
             string CharName = head[0];
             talker.Cast = CharName;
+            Program.TalkingChar = CharName;
             Console.WriteLine( "Char = " + CharName);
 
             TalkerComponentCollection2 CharStatus = talker.Components;
@@ -230,26 +299,28 @@ namespace MyServer {
             //バルーン空打ち対策
             if ( CheckText != "" ) {
                 talker.Stop();
-                SpeakingState2 state = talker.Speak( VoiceText );
-                Console.WriteLine( VoiceText );
+
+                VoiceText = VoiceText.Replace("。",",");
+                VoiceText = VoiceText.Replace("、",",");
+
+                //for
+                string[] VoiceSep = { ","};
+                string[] VoiceTexts = VoiceText.Split( VoiceSep , StringSplitOptions.None);
+                //stopではfor文を止められないんだよね。実質continue
+                
+                Program.TalkingCancel = false;
+                foreach( string Line in VoiceTexts ){
+                    //外部からトークを終了できるように。
+                    if ( Program.TalkingCancel ) {
+                        break;
+                    }
+                    if ( Line != "" ) {
+                        Console.WriteLine( Line );
+                        SpeakingState2 state = talker.Speak( Line );
+                        state.Wait();
+                    }
+                }
             }
-
-
-            //string[] VoiceSep = {"、" , "。"};
-            //string[] VoiceTexts = VoiceText.Split( VoiceSep , StringSplitOptions.None);
-            //foreach( string Line in VoiceTexts ){
-            //    if ( Line != "" ) {
-            //        Console.WriteLine( Line );
-            //        talker.Stop();
-            //        SpeakingState2 state = talker.Speak( Line );
-            //    }
-            //}
-
-
-            //SpeakingState2 state = talker.Speak( VoiceText );
-            //state.Wait();
-            //Thread.Sleep(2000);
-            
         }
     }
 }
