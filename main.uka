@@ -156,7 +156,8 @@ OnOtherGhostTalk {
         //VoiceText    = _VoiceText
 
 
-        if ( _VoiceText != "" && _Char != "" ) {
+        //。\nを変換する為。これのみの出力でバルーンが削除される場合、無効に空が飛び、現在の読み上げが止まってしまう問題があった。
+        if ( _VoiceText != "" && _Char != "" && _VoiceText != "。" ) {
             FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
             _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_args)" )
         }

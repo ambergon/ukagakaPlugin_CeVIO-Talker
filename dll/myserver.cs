@@ -129,6 +129,7 @@ namespace MyServer {
             CeVIO cevio = new CeVIO();
             return Task.Run(() => {
                         while ( ContinueProgram ) {
+                            Thread.Sleep( Program.WaitTime );
                             if( Program.CeVIOText != "" && Program.CeVIOText != "end") {
                                 text = Program.CeVIOText;
                                 Program.CeVIOText = "";
@@ -136,7 +137,6 @@ namespace MyServer {
                                 cevio.talk( text );
                                 //cevio.testTalk( text );
                             }
-                            Thread.Sleep( Program.WaitTime );
                         }
                     });
         }
@@ -292,10 +292,15 @@ namespace MyServer {
 
             //200文字問題
             string   VoiceText   = Options[AllOptionNum-1];
+
+            //空うちが何かわからん時に使う。
+            //Console.WriteLine( "AAA" + VoiceText + "AAA" );
+            
             string CheckText = VoiceText.Replace("。","");
             CheckText = CheckText.Replace("、","");
             CheckText = CheckText.Replace("　","");
             CheckText = CheckText.Replace(" ","");
+            CheckText = CheckText.Replace(",","");
             //バルーン空打ち対策
             if ( CheckText != "" ) {
                 talker.Stop();
@@ -304,7 +309,7 @@ namespace MyServer {
                 VoiceText = VoiceText.Replace("、",",");
 
                 //for
-                string[] VoiceSep = { ","};
+                string[] VoiceSep = { "," };
                 string[] VoiceTexts = VoiceText.Split( VoiceSep , StringSplitOptions.None);
                 //stopではfor文を止められないんだよね。実質continue
                 
