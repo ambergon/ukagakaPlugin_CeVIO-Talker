@@ -38,7 +38,7 @@ namespace MyServer {
 
         static void Main(string[] args) {
             // 【CeVIO AI】開始
-            //ServiceControl2.StartHost(false);
+            ServiceControl2.StartHost(false);
             
             Parallel.Invoke(
                     () => {
@@ -52,7 +52,7 @@ namespace MyServer {
             
 
             // 【CeVIO AI】終了
-            //ServiceControl2.CloseHost();
+            ServiceControl2.CloseHost();
         }
 
         public static Task RecieveServerTask(string pipeName) {

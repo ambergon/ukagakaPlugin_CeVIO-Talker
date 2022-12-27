@@ -102,6 +102,7 @@ OnOtherGhostTalk {
         TalkingGhost = reference[0]
         _Char = TalkCharcter( TalkingGhost )
         //_Char = "さとうささら"
+        //_Char = ""
         
 
         EVAL( "_Volume    = CeVIO.%(_Char).Volume" )
@@ -148,16 +149,18 @@ OnOtherGhostTalk {
 
         _Script       = reference[4]
         _VoiceText    = TalkText( _Script )
-        VoiceText    = _VoiceText
+        _args = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
+
+        //Char = _Char
+        //args = _args
+        //VoiceText    = _VoiceText
 
 
         if ( _VoiceText != "" && _Char != "" ) {
             FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
-            _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)" )
+            _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_args)" )
         }
-        
-        devnull   = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
-        SAVEVAR()
+        //SAVEVAR("../SSP-CeVIO-Talker.cfg")
     }
 }
 
@@ -192,8 +195,11 @@ TalkCharcter {
         }
     }
     //もし設定がなかったら喋る子
-    if ( _Talker == "") {
-        _Talker = CeVIO.Who
+    if ( _Talker == "" ) {
+        //Whoが存在しなかった場合はInt的な扱いになるのか。
+        if ( ISVAR( "CeVIO.Who" ) != 0 ) {
+            _Talker = CeVIO.Who
+        }
     }
     _Talker
 }
