@@ -99,7 +99,7 @@ namespace MyServer {
                             } else {
                                 writeData = "Server read OK.";
                                 ss.WriteString( writeData );
-                                Console.WriteLine( readData );
+                                //Console.WriteLine( readData );
 
                                 Program.TalkingCancel = true;
                                 //最後に喋ったキャラを保存しておけばキャンセルが聞くな。
