@@ -103,65 +103,63 @@ OnOtherGhostTalk {
         _Char = TalkCharcter( TalkingGhost )
         //_Char = "さとうささら"
         //_Char = ""
-        
+        if ( _Char != "" ) {
 
-        EVAL( "_Volume    = CeVIO.%(_Char).Volume" )
-        EVAL( "_Speed     = CeVIO.%(_Char).Speed" )
-        EVAL( "_Tone      = CeVIO.%(_Char).Tone" )
-        EVAL( "_Alpha     = CeVIO.%(_Char).Alpha" )
-        EVAL( "_ToneScale = CeVIO.%(_Char).ToneScale" )
+            EVAL( "_Volume    = CeVIO.%(_Char).Volume" )
+            EVAL( "_Speed     = CeVIO.%(_Char).Speed" )
+            EVAL( "_Tone      = CeVIO.%(_Char).Tone" )
+            EVAL( "_Alpha     = CeVIO.%(_Char).Alpha" )
+            EVAL( "_ToneScale = CeVIO.%(_Char).ToneScale" )
 
-        if ( _Volume       == "" ) { _Volume    = 50 }
-        if ( _Speed        == "" ) { _Speed     = 45 }
-        if ( _Tone         == "" ) { _Tone      = 50 }
-        if ( _Alpha        == "" ) { _Alpha     = 50 }
-        if ( _ToneScale    == "" ) { _ToneScale = 50 }
+            if ( _Volume       == "" ) { _Volume    = 50 }
+            if ( _Speed        == "" ) { _Speed     = 45 }
+            if ( _Tone         == "" ) { _Tone      = 50 }
+            if ( _Alpha        == "" ) { _Alpha     = 50 }
+            if ( _ToneScale    == "" ) { _ToneScale = 50 }
 
 
-		//GETLIST options
-		//"元気,悲しみ"
-		FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "sjis"  )
-		_CeVIO.Options   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "GetCharOptions_%(_Char)"  )
+            //GETLIST options
+            //"元気,悲しみ"
+            FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "sjis"  )
+            _CeVIO.Options   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "GetCharOptions_%(_Char)"  )
 
-		_CharOptions = ""
-		for _i = 0 ; _i < ARRAYSIZE( _CeVIO.Options ) ; _i++ {
+            _CharOptions = ""
+            for _i = 0 ; _i < ARRAYSIZE( _CeVIO.Options ) ; _i++ {
 
-			//リストの最後の空白が沸く対処。
-			_CeVIO.Options[_i] = REPLACE( _CeVIO.Options[_i] , " " , "" )
+                //リストの最後の空白が沸く対処。
+                _CeVIO.Options[_i] = REPLACE( _CeVIO.Options[_i] , " " , "" )
 
-            //空配列対策
-			if ( _CeVIO.Options[_i] == "") {
-				continue
-			}
+                //空配列対策
+                if ( _CeVIO.Options[_i] == "") {
+                    continue
+                }
 
-			_OptionName = _CeVIO.Options[_i]
-			EVAL( "_OptionNum = CeVIO.%(_Char).%(_OptionName)")
-			if ( _OptionNum == "" || _OptionNum == "0"){
-                _CharOptions = _CharOptions + ","
-			} else {
-                _CharOptions = _CharOptions + _OptionName + "MySep" + TOSTR(_OptionNum) + ","
+                _OptionName = _CeVIO.Options[_i]
+                EVAL( "_OptionNum = CeVIO.%(_Char).%(_OptionName)")
+                if ( _OptionNum == "" || _OptionNum == "0"){
+                    _CharOptions = _CharOptions + ","
+                } else {
+                    _CharOptions = _CharOptions + _OptionName + "MySep" + TOSTR(_OptionNum) + ","
+                }
             }
-		}
-		_CharOptions = RE_REPLACE( _CharOptions , ",$" , "")
+            _CharOptions = RE_REPLACE( _CharOptions , ",$" , "")
 
 
+            _Script       = reference[4]
+            _VoiceText    = TalkText( _Script )
+            _args = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
+
+            //Char = _Char
+            //args = _args
+            //VoiceText    = _VoiceText
 
 
-        _Script       = reference[4]
-        _VoiceText    = TalkText( _Script )
-        _args = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
-
-        //Char = _Char
-        //args = _args
-        //VoiceText    = _VoiceText
-
-
-        //。\nを変換する為。これのみの出力でバルーンが削除される場合、無効に空が飛び、現在の読み上げが止まってしまう問題があった。
-        if ( _VoiceText != "" && _Char != "" && _VoiceText != "。" ) {
-            FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
-            _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_args)" )
+            //。\nを変換する為。これのみの出力でバルーンが削除される場合、無効に空が飛び、現在の読み上げが止まってしまう問題があった。
+            if ( _VoiceText != "" && _VoiceText != "。" ) {
+                FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
+                _devnull   = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "%(_args)" )
+            }
         }
-        //SAVEVAR("../SSP-CeVIO-Talker.cfg")
     }
 }
 
