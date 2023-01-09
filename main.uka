@@ -15,7 +15,9 @@ OnPluginLoad.Self {
 OnPluginUnload.Self {
     //end送信
     FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
-    _devNull = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "end"  )
+    if ( CeVIOBoot == "True" ) {
+        _devNull = FUNCTIONEX("./dll/proxy_ex.dll" ,  "./client.exe" , "end"  )
+    }
 
     ERASEVAR( CeVIOBoot )
 }
