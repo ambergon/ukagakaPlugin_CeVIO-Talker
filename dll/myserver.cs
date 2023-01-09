@@ -39,20 +39,25 @@ namespace MyServer {
         static void Main(string[] args) {
             // 【CeVIO AI】開始
             ServiceControl2.StartHost(false);
-            
-            Parallel.Invoke(
-                    () => {
-                        //文字列を受けて流すだけの関数 
-                        RecieveServerTask("UkagakaPlugin/CeVIO_Talker").Wait();
-                    },
-                    () => {
-                        TalkingCeVioTask().Wait();
-                    }
-                );
-            
 
-            // 【CeVIO AI】終了
-            ServiceControl2.CloseHost();
+            bool Check = ServiceControl2.IsHostStarted;
+            //Console.Write( Check );
+            if ( Check == true ) {
+                Parallel.Invoke(
+                        () => {
+                            //文字列を受けて流すだけの関数 
+                            RecieveServerTask("UkagakaPlugin/CeVIO_Talker").Wait();
+                        },
+                        () => {
+                            TalkingCeVioTask().Wait();
+                        }
+                    );
+                
+
+                // 【CeVIO AI】終了
+                ServiceControl2.CloseHost();
+            }
+            
         }
 
         public static Task RecieveServerTask(string pipeName) {
