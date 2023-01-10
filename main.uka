@@ -98,8 +98,6 @@ OnOtherGhostTalk {
         CeVIOBoot = FUNCTIONEX("./dll/proxy_ex.dll" , "./checkCeVIO.exe" )
     }
 
-
-
     if ( CeVIOBoot == "True" ) {
         TalkingGhost = reference[0]
         _Char = TalkCharcter( TalkingGhost )
@@ -145,8 +143,6 @@ OnOtherGhostTalk {
                 }
             }
             _CharOptions = RE_REPLACE( _CharOptions , ",$" , "")
-
-
             _Script       = reference[4]
             _VoiceText    = TalkText( _Script )
             _args = "%(_Char),%(_Volume),%(_Speed),%(_Tone),%(_Alpha),%(_ToneScale),%(_CharOptions),%(_VoiceText)"
