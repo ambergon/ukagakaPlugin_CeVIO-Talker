@@ -17,7 +17,7 @@ class Program {
         //起動されているかどうか
         //bool Check = ServiceControl2.IsHostStarted;
         //Console.Write( Check );
-        int Check = (int)ServiceControl2.StartHost(true);
+        int Check = (int)ServiceControl2.StartHost(false);
         if ( Check == 0) {
             Console.Write("True");
         } else {
