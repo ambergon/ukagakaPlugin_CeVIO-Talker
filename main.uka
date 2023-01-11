@@ -6,7 +6,7 @@ version {
 	"origin/1.0"
 }
 OnPluginLoad.Self {
-    CeVIOBoot = ""
+    CeVIOBoot = "False"
     //起動時にserverを起動する。
     _Server = PluginDirectory + "\dll\myserver.exe"
     _devnull = EXECUTE( _Server )
@@ -25,7 +25,7 @@ OnPluginUnload.Self {
 
 //使えるキャラクター一覧のメニューを生成する。
 OnMenuExec {
-    if ( CeVIOBoot == "" ){
+    if ( CeVIOBoot == "False" ){
         //起動と同時に処理したかったが、タイムアウトするのかSSPの起動が止まってしまう。
         FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
         CeVIOBoot = FUNCTIONEX("./dll/proxy_ex.dll" , "./checkCeVIO.exe" )
@@ -93,7 +93,7 @@ OnCeVIO.ConfigTalkCharactar {
 
 //ゴーストが喋るときの設定
 OnOtherGhostTalk {
-    if ( CeVIOBoot == "" ){
+    if ( CeVIOBoot == "False" ){
         FUNCTIONEX("./dll/proxy_ex.dll" ,  "/charset" , "UTF-8"  )
         CeVIOBoot = FUNCTIONEX("./dll/proxy_ex.dll" , "./checkCeVIO.exe" )
     }

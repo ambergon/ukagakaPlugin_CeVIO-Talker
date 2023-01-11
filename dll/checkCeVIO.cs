@@ -17,6 +17,9 @@ class Program {
         //起動されているかどうか
         //bool Check = ServiceControl2.IsHostStarted;
         //Console.Write( Check );
+        //Dllを同梱できない問題。
+        //そのため、CeVIOが無い場合はFalseではなく、エラーが呼ばれる。
+        //FileNotFountExceptionはtry catchで拾えなかった。
         int Check = (int)ServiceControl2.StartHost(true);
         if ( Check == 0) {
             Console.Write("True");
