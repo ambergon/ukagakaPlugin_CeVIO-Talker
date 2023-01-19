@@ -342,10 +342,11 @@ OnCeVIO.CharConfigMenu {
 
 OnCeVIO.WhoTalker {
     CeVIO.Char   = reference[0]
+    EVAL( "_Kizon = CeVIO.WhoTalker.%(CeVIO.Char)" )
     "\_qこの声でどのゴーストを喋らせたいか入力してください。\n/
     入力はゴースト切り替えで表示される名前です。\n/
     複数入力する場合は「,」で区切ってください。\n/
-    \![open,inputbox,OnCeVIO.SetWhoTalker]\e"
+    \![open,inputbox,OnCeVIO.SetWhoTalker,0,%(_Kizon)]\e"
 }
 
 
