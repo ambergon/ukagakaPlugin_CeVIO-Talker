@@ -1,8 +1,10 @@
 # CeVIO-Talker
 このプラグインは伺的アドベントカレンダー2022で21日目の記事として作成されました。
-
-
 [【SSP】伺かをCEVIO AIの力を借りてフルボイス化した。【WINDOWS10】](https://ambergonslibrary.com/?p=8544)
+
+2023/04/06 リメイクしました。
+[GitHub - ambergon/ukagakaPlugin_CeVIO-TalkerV2](https://github.com/ambergon/ukagakaPlugin_CeVIO-TalkerV2)
+
 
 
 ## お借りしたもの
